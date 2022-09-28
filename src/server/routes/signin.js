@@ -1,6 +1,7 @@
 // Handle requests to /api/auth/signin
 import oAuthSignin from '../lib/signin/oauth'
 import emailSignin from '../lib/signin/email'
+import openIdSignin from '../lib/signin/openid'
 import logger from '../../lib/logger'
 
 export default async (req, res, options, done) => {
@@ -73,6 +74,14 @@ export default async (req, res, options, done) => {
     return redirect(`${baseUrl}${basePath}/verify-request?provider=${encodeURIComponent(
       provider.id
     )}&type=${encodeURIComponent(provider.type)}`)
+  } else if (type === 'openid' && req.method === 'POST') {
+    try {
+      const openIdSigninUrl = await openIdSignin(provider)
+      return redirect(openIdSigninUrl)
+    } catch (error) {
+      logger.error('SIGNIN_OPENID_ERROR', error)
+      return redirect(`${baseUrl}${basePath}/error?error=openIdSignin`)
+    }
   } else {
     return redirect(`${baseUrl}${basePath}/signin`)
   }
